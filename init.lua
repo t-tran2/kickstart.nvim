@@ -91,18 +91,16 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
--- Make line numbers default
-vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -165,7 +163,11 @@ vim.opt.scrolloff = 10
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages in a window' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+--
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -189,6 +191,45 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- Resize window using <ctrl> arrow keys
+vim.keymap.set('n', '<C-Up>', ':resize -2<CR>', { desc = 'Increase window height' })
+vim.keymap.set('n', '<C-Down>', ':resize +2<CR>', { desc = 'Decrease window height' })
+vim.keymap.set('n', '<C-Left>', ':vertical resize -2<CR>', { desc = 'Decrease window width' })
+vim.keymap.set('n', '<C-Right>', ':vertical resize +2<CR>', { desc = 'Increase window width' })
+
+-- Split window vertically
+vim.keymap.set('n', '<leader>sv', '<cmd>vsplit<CR>', { desc = 'Split window vertically' })
+
+local opts = { noremap = true }
+-- Keep cursor centered while navigating
+vim.keymap.set('n', 'n', 'nzzzv', opts)
+vim.keymap.set('n', 'N', 'Nzzzv', opts)
+vim.keymap.set('n', 'J', 'mzJ`z', opts)
+vim.keymap.set('n', '<C-d>', '<C-d>zz', opts)
+vim.keymap.set('n', '<C-u>', '<C-u>zz', opts)
+
+-- === Replace Word Under Cursor ===
+vim.keymap.set('n', '<leader>rw', ':%s/\\<C-r><C-w>\\>//g<Left><Left>', { noremap = true, desc = 'Replace all occurrences' })
+vim.keymap.set('n', '<leader>rW', ':%s/\\<C-r><C-w>\\>//gc<Left><Left>', { noremap = true, desc = 'Replace all occurrences (with confirmation)' })
+
+-- === Moving Lines in Visual Mode ===
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", opts)
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", opts)
+
+-- Continuous paste in visual mode: use black hole register
+vim.keymap.set('v', 'p', '"_dP', { noremap = true, silent = true })
+
+-- Restore original paste behavior under <leader>p
+vim.keymap.set('v', '<leader>p', 'p', { noremap = true, silent = true })
+
+-- Buffer management
+vim.keymap.set('n', '<S-l>', ':bnext<CR>', { desc = 'Next buffer' })
+vim.keymap.set('n', '<S-h>', ':bprevious<CR>', { desc = 'Previous buffer' })
+vim.keymap.set('n', '<leader>x', ':bdelete<CR>', { desc = 'Close buffer' })
+
+-- Terminal Mappings
+vim.keymap.set('n', '<leader>t', ':split term://bash<CR>', { desc = 'Open terminal' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -316,7 +357,7 @@ require('lazy').setup({
       spec = {
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
-        { '<leader>r', group = '[R]ename' },
+        { '<leader>r', group = '[R]ename/[R]eplace' },
         { '<leader>s', group = '[S]earch' },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
@@ -437,6 +478,36 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'jose-elias-alvarez/null-ls.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local null_ls = require 'null-ls'
+      null_ls.setup {
+        sources = {
+          -- Add ESLint diagnostics
+          null_ls.builtins.diagnostics.eslint_d.with {
+            extra_args = { '--cache' }, -- Enable caching for faster results
+            condition = function(utils)
+              return utils.root_has_file '.eslintrc.js' or utils.root_has_file '.eslintrc.json' -- Only run if ESLint config exists
+            end,
+          },
+          null_ls.builtins.formatting.eslint_d, -- Use eslint_d for formatting (much faster)
+        },
+        on_attach = function(client, bufnr)
+          if client.supports_method 'textDocument/formatting' then
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              buffer = bufnr,
+              callback = function()
+                vim.lsp.buf.format { bufnr = bufnr, timeout_ms = 5000 }
+              end,
+            })
+          end
+        end,
+      }
+    end,
+  },
+
   -- LSP Plugins
   {
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
@@ -537,7 +608,7 @@ require('lazy').setup({
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('<leader>r', vim.lsp.buf.rename, '[R]e[n]ame')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -615,7 +686,13 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        angularls = {},
+        csharp_ls = {},
+        cssls = {},
+        html = {},
+        jsonls = {},
+        ts_ls = {},
+        tailwindcss = {},
         --
 
         lua_ls = {
@@ -706,6 +783,88 @@ require('lazy').setup({
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
     },
+  },
+
+  { -- Debugging
+    'mfussenegger/nvim-dap',
+    dependencies = {
+      -- Installs the debug adapters for you
+      'williamboman/mason.nvim',
+      'WhoIsSethDaniel/mason-tool-installer.nvim',
+
+      -- Provides a beautiful UI for the debugger
+      { 'rcarriga/nvim-dap-ui', dependencies = { 'nvim-neotest/nvim-nio' } },
+    },
+    config = function()
+      local dap = require 'dap'
+      local dapui = require 'dapui'
+
+      -- Setup the UI
+      dapui.setup()
+
+      -- Dap listeners are events that are triggered when the debugger is active
+      dap.listeners.after.event_initialized['dapui_config'] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated['dapui_config'] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited['dapui_config'] = function()
+        dapui.close()
+      end
+
+      -- Keymaps for debugging
+      vim.keymap.set('n', '<leader>b', function()
+        require('dap').toggle_breakpoint()
+      end, { desc = 'Debug: Toggle Breakpoint' })
+      vim.keymap.set('n', '<F5>', function()
+        require('dap').continue()
+      end, { desc = 'Debug: Start/Continue' })
+      vim.keymap.set('n', '<F10>', function()
+        require('dap').step_over()
+      end, { desc = 'Debug: Step Over' })
+      vim.keymap.set('n', '<F11>', function()
+        require('dap').step_into()
+      end, { desc = 'Debug: Step Into' })
+      vim.keymap.set('n', '<F12>', function()
+        require('dap').step_out()
+      end, { desc = 'Debug: Step Out' })
+      vim.keymap.set('n', '<leader>B', function()
+        require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
+      end, { desc = 'Debug: Set Conditional Breakpoint' })
+      vim.keymap.set('n', '<leader>lp', function()
+        require('dap').set_breakpoint(nil, nil, vim.fn.input 'Log point message: ')
+      end, { desc = 'Debug: Set Logpoint' })
+      vim.keymap.set('n', '<leader>dR', function()
+        require('dap').repl.open()
+      end, { desc = 'Debug: Open REPL' })
+      vim.keymap.set('n', '<leader>dl', function()
+        require('dap').run_last()
+      end, { desc = 'Debug: Run Last' })
+
+      -- Ensure netcoredbg is installed
+      require('mason-tool-installer').setup {
+        ensure_installed = { 'netcoredbg' },
+      }
+
+      -- Configure the .NET Core Debugger
+      dap.adapters.coreclr = {
+        type = 'executable',
+        command = require('mason-registry').get_package('netcoredbg'):get_install_path() .. '/netcoredbg/netcoredbg',
+        args = { '--interpreter=vscode' },
+      }
+
+      dap.configurations.cs = {
+        {
+          type = 'coreclr',
+          name = 'launch - netcoredbg',
+          request = 'launch',
+          program = function()
+            return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/net8.0/', 'file')
+          end,
+        },
+      }
+    end,
   },
 
   { -- Autocompletion
@@ -906,6 +1065,21 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- Optional for file icons
+      'MunifTanjim/nui.nvim',
+    },
+    config = function()
+      require('neo-tree').setup()
+
+      -- Keymap for toggling NeoTree
+      vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle NeoTree' })
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
