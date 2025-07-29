@@ -657,7 +657,7 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         angularls = {},
-        csharp_ls = {},
+        omnisharp = {},
         cssls = {},
         html = {},
         jsonls = {},
