@@ -424,12 +424,7 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
-          mappings = {
-            i = {
-              ['<C-h>'] = 'scroll_horizontal_left',
-              ['<C-l>'] = 'scroll_horizontal_right',
-            },
-          },
+          path_display = { 'truncate' },
         },
         -- pickers = {}
         extensions = {
