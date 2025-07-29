@@ -1055,7 +1055,7 @@ require('lazy').setup({
       require('neo-tree').setup()
 
       -- Keymap for toggling NeoTree
-      vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle NeoTree' })
+      vim.keymap.set('n', '<leader>E', ':Neotree toggle<CR>', { desc = 'Toggle NeoTree' })
     end,
   },
 
