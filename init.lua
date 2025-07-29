@@ -478,36 +478,6 @@ require('lazy').setup({
     end,
   },
 
-  {
-    'jose-elias-alvarez/null-ls.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      local null_ls = require 'null-ls'
-      null_ls.setup {
-        sources = {
-          -- Add ESLint diagnostics
-          null_ls.builtins.diagnostics.eslint_d.with {
-            extra_args = { '--cache' }, -- Enable caching for faster results
-            condition = function(utils)
-              return utils.root_has_file '.eslintrc.js' or utils.root_has_file '.eslintrc.json' -- Only run if ESLint config exists
-            end,
-          },
-          null_ls.builtins.formatting.eslint_d, -- Use eslint_d for formatting (much faster)
-        },
-        on_attach = function(client, bufnr)
-          if client.supports_method 'textDocument/formatting' then
-            vim.api.nvim_create_autocmd('BufWritePre', {
-              buffer = bufnr,
-              callback = function()
-                vim.lsp.buf.format { bufnr = bufnr, timeout_ms = 5000 }
-              end,
-            })
-          end
-        end,
-      }
-    end,
-  },
-
   -- LSP Plugins
   {
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
@@ -687,7 +657,7 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         angularls = {},
-        csharp_ls = {},
+        omnisharp = {},
         cssls = {},
         html = {},
         jsonls = {},
@@ -724,6 +694,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'eslint_d',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -780,7 +751,8 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascript = { { 'prettierd', 'prettier' }, 'eslint_d', stop_after_first = true },
+        typescript = { { 'prettierd', 'prettier' }, 'eslint_d', stop_after_first = true },
       },
     },
   },
