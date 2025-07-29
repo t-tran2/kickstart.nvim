@@ -656,7 +656,9 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        angularls = {},
+        angularls = {
+          root_dir = require('lspconfig.util').root_pattern('angular.json', '.git'),
+        },
         omnisharp = {},
         cssls = {},
         html = {},
@@ -752,8 +754,8 @@ require('lazy').setup({
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        javascript = { { 'prettierd', 'prettier' }, 'eslint_d', stop_after_first = true },
-        typescript = { { 'prettierd', 'prettier' }, 'eslint_d', stop_after_first = true },
+        javascript = { 'prettierd', 'prettier', 'eslint_d' },
+        typescript = { 'prettierd', 'prettier', 'eslint_d' },
       },
     },
   },
@@ -957,6 +959,23 @@ require('lazy').setup({
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
+  -- { -- Git TUI
+  --   'kdheepak/lazygit.nvim',
+  --   cmd = 'LazyGit',
+  --   event = 'VimEnter',
+  --   config = function()
+  --     vim.keymap.set('n', '<leader>gg', '<cmd>LazyGit<CR>', { desc = 'LazyGit' })
+  --   end,
+  -- },
+
+  -- { -- Code outline
+  --   'simrat39/symbols-outline.nvim',
+  --   event = 'VimEnter',
+  --   config = function()
+  --     vim.keymap.set('n', '<leader>cs', '<cmd>SymbolsOutline<CR>', { desc = 'Symbols Outline' })
+  --   end,
+  -- },
+
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()
@@ -974,6 +993,12 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      -- mini.comment
+      --
+      --  - gc   - [G]o [C]omment/uncomment (visual)
+      --  - gcc  - [G]o [C]omment/uncomment (current line)
+      require('mini.comment').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
