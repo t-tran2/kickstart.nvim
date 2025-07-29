@@ -657,7 +657,7 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         angularls = {},
-        omnisharp = {},
+        csharp_ls = {},
         cssls = {},
         html = {},
         jsonls = {},
@@ -695,6 +695,7 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
         'eslint_d',
+        'netcoredbg',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -762,7 +763,7 @@ require('lazy').setup({
     dependencies = {
       -- Installs the debug adapters for you
       'williamboman/mason.nvim',
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
+      'jay-babu/mason-nvim-dap.nvim',
 
       -- Provides a beautiful UI for the debugger
       { 'rcarriga/nvim-dap-ui', dependencies = { 'nvim-neotest/nvim-nio' } },
@@ -770,6 +771,23 @@ require('lazy').setup({
     config = function()
       local dap = require 'dap'
       local dapui = require 'dapui'
+
+      require('mason-nvim-dap').setup {
+        -- Makes a best effort to setup the various debuggers with
+        -- reasonable debug configurations
+        automatic_installation = true,
+
+        -- You can provide additional configuration to the handlers,
+        -- see mason-nvim-dap README for more information
+        handlers = {},
+
+        -- You'll need to check that you have the required things installed
+        -- online, please don't ask me how to install them :)
+        ensure_installed = {
+          -- Update this to ensure that you have the debuggers for the languages you use
+          'delve',
+        },
+      }
 
       -- Setup the UI
       dapui.setup()
@@ -786,56 +804,19 @@ require('lazy').setup({
       end
 
       -- Keymaps for debugging
-      vim.keymap.set('n', '<leader>b', function()
-        require('dap').toggle_breakpoint()
-      end, { desc = 'Debug: Toggle Breakpoint' })
-      vim.keymap.set('n', '<F5>', function()
-        require('dap').continue()
-      end, { desc = 'Debug: Start/Continue' })
-      vim.keymap.set('n', '<F10>', function()
-        require('dap').step_over()
-      end, { desc = 'Debug: Step Over' })
-      vim.keymap.set('n', '<F11>', function()
-        require('dap').step_into()
-      end, { desc = 'Debug: Step Into' })
-      vim.keymap.set('n', '<F12>', function()
-        require('dap').step_out()
-      end, { desc = 'Debug: Step Out' })
+      vim.keymap.set('n', '<leader>b', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
+      vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
+      vim.keymap.set('n', '<F10>', dap.step_over, { desc = 'Debug: Step Over' })
+      vim.keymap.set('n', '<F11>', dap.step_into, { desc = 'Debug: Step Into' })
+      vim.keymap.set('n', '<F12>', dap.step_out, { desc = 'Debug: Step Out' })
       vim.keymap.set('n', '<leader>B', function()
-        require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
+        dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end, { desc = 'Debug: Set Conditional Breakpoint' })
       vim.keymap.set('n', '<leader>lp', function()
-        require('dap').set_breakpoint(nil, nil, vim.fn.input 'Log point message: ')
+        dap.set_breakpoint(nil, nil, vim.fn.input 'Log point message: ')
       end, { desc = 'Debug: Set Logpoint' })
-      vim.keymap.set('n', '<leader>dR', function()
-        require('dap').repl.open()
-      end, { desc = 'Debug: Open REPL' })
-      vim.keymap.set('n', '<leader>dl', function()
-        require('dap').run_last()
-      end, { desc = 'Debug: Run Last' })
-
-      -- Ensure netcoredbg is installed
-      require('mason-tool-installer').setup {
-        ensure_installed = { 'netcoredbg' },
-      }
-
-      -- Configure the .NET Core Debugger
-      dap.adapters.coreclr = {
-        type = 'executable',
-        command = require('mason-registry').get_package('netcoredbg'):get_install_path() .. '/netcoredbg/netcoredbg',
-        args = { '--interpreter=vscode' },
-      }
-
-      dap.configurations.cs = {
-        {
-          type = 'coreclr',
-          name = 'launch - netcoredbg',
-          request = 'launch',
-          program = function()
-            return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/net8.0/', 'file')
-          end,
-        },
-      }
+      vim.keymap.set('n', '<leader>dR', dap.repl.open, { desc = 'Debug: Open REPL' })
+      vim.keymap.set('n', '<leader>dl', dap.run_last, { desc = 'Debug: Run Last' })
     end,
   },
 
