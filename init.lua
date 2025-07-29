@@ -658,7 +658,7 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         angularls = {
           root_dir = require('lspconfig.util').root_pattern('angular.json', '.git'),
-          cmd = { 'ngserver', '--project', 'tsconfig.json' },
+          cmd = { 'ngserver', '--project', 'tsconfig.app.json' },
         },
         omnisharp = {},
         cssls = {},
