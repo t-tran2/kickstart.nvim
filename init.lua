@@ -449,7 +449,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>b', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -805,12 +805,12 @@ require('lazy').setup({
       end
 
       -- Keymaps for debugging
-      vim.keymap.set('n', '<leader>b', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
+      vim.keymap.set('n', '<leader>B', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
       vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
       vim.keymap.set('n', '<F10>', dap.step_over, { desc = 'Debug: Step Over' })
       vim.keymap.set('n', '<F11>', dap.step_into, { desc = 'Debug: Step Into' })
       vim.keymap.set('n', '<F12>', dap.step_out, { desc = 'Debug: Step Out' })
-      vim.keymap.set('n', '<leader>B', function()
+      vim.keymap.set('n', '<leader>bc', function()
         dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end, { desc = 'Debug: Set Conditional Breakpoint' })
       vim.keymap.set('n', '<leader>lp', function()
@@ -1016,6 +1016,23 @@ require('lazy').setup({
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
+    end,
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { { 'nvim-lua/plenary.nvim' } },
+    config = function()
+      local harpoon = require('harpoon')
+      harpoon:setup()
+
+      vim.keymap.set('n', '<leader>a', function() harpoon:list():add() end, { desc = '[A]dd file to harpoon' })
+      vim.keymap.set('n', '<leader>m', function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = 'Show harpoon [M]enu' })
+
+      vim.keymap.set('n', '<leader>1', function() harpoon:list():select(1) end, { desc = 'Go to harpoon file 1' })
+      vim.keymap.set('n', '<leader>2', function() harpoon:list():select(2) end, { desc = 'Go to harpoon file 2' })
+      vim.keymap.set('n', '<leader>3', function() harpoon:list():select(3) end, { desc = 'Go to harpoon file 3' })
+      vim.keymap.set('n', '<leader>4', function() harpoon:list():select(4) end, { desc = 'Go to harpoon file 4' })
     end,
   },
   { -- Highlight, edit, and navigate code
